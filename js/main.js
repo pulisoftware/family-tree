@@ -140,9 +140,18 @@ function updateCalendar() {
             // Crear tooltip con información detallada
             const tooltipContent = birthdaysToday.map(b => {
                 const person = familyData.nodes.find(n => n.name === b.name);
-                const nextAge = getAge(person.birthDate) + 1;
+                const age = getAge(person.birthDate);
+                
+                // Determinar si el cumpleaños ya pasó este año
+                const today = new Date();
+                const birthDate = new Date(person.birthDate);
+                const hasPassed = (currentYear < today.getFullYear()) || 
+                                (currentYear === today.getFullYear() && 
+                                 (currentMonth < today.getMonth() || 
+                                  (currentMonth === today.getMonth() && day <= today.getDate())));
+                
                 return `<strong>${person.name}</strong><br>
-                        Cumplirá ${nextAge} años`;
+                        ${hasPassed ? `Cumplió ${age} años` : `Cumplirá ${age + 1} años`}`;
             }).join('<br>');
             
             // Crear el tooltip una sola vez y reutilizarlo
@@ -313,12 +322,27 @@ function getBasePath() {
 function getDefaultImage(node) {
     const familyName = getFamilyNameFromPath();
     const basePath = getBasePath();
-    if (!node.image) {
-        return node.sex === 'M' ? 
-            `${basePath}/families/${familyName}/images/default-avatar-male.png` : 
-            `${basePath}/families/${familyName}/images/default-avatar-female.png`;
+    
+    // Primero intentar cargar la imagen específica usando el ID
+    const specificImagePath = `${basePath}/families/${familyName}/images/${node.id}.png`;
+    
+    // Si no hay imagen específica, usar el avatar por defecto según el sexo
+    const defaultImagePath = node.sex === 'M' ? 
+        `${basePath}/families/${familyName}/images/default-avatar-male.png` : 
+        `${basePath}/families/${familyName}/images/default-avatar-female.png`;
+    
+    // Retornar directamente la ruta de la imagen
+    return specificImagePath;
+}
+
+// Función para verificar si una imagen existe
+async function checkImageExists(url) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+    } catch {
+        return false;
     }
-    return `${basePath}/families/${familyName}/images/${node.image}`;
 }
 
 // Función para actualizar el árbol
@@ -362,220 +386,256 @@ function update(source) {
     const defs = svg.append("defs");
 
     // Crear patrones para todos los nodos
-    nodes.forEach((d) => {
-        if (d.data.isRelationship) {
-            // Obtener los IDs de las dos personas en la relación
-            const [persona1, persona2] = d.data.name.split(" y ");
-            const persona1Node = familyData.nodes.find(n => n.name === persona1);
-            const persona2Node = familyData.nodes.find(n => n.name === persona2);
+    const createPatterns = async () => {
+        for (const d of nodes) {
+            if (d.data.isRelationship) {
+                // Obtener los IDs de las dos personas en la relación
+                const [persona1, persona2] = d.data.name.split(" y ");
+                const persona1Node = familyData.nodes.find(n => n.name === persona1);
+                const persona2Node = familyData.nodes.find(n => n.name === persona2);
 
-            // Crear patrón para persona 1
-            defs.append("pattern")
-                .attr("id", `avatar-left-${d.data.id}`)
-                .attr("height", 1)
-                .attr("width", 1)
-                .attr("patternUnits", "objectBoundingBox")
-                .append("image")
-                .attr("href", getDefaultImage(persona1Node))
-                .attr("width", 40)
-                .attr("height", 40)
-                .attr("preserveAspectRatio", "xMidYMid slice");
+                // Crear patrón para persona 1
+                const pattern1 = defs.append("pattern")
+                    .attr("id", `avatar-left-${d.data.id}`)
+                    .attr("height", 1)
+                    .attr("width", 1)
+                    .attr("patternUnits", "objectBoundingBox");
+                
+                const image1 = pattern1.append("image")
+                    .attr("width", 40)
+                    .attr("height", 40)
+                    .attr("preserveAspectRatio", "xMidYMid slice");
+                
+                // Crear patrón para persona 2
+                const pattern2 = defs.append("pattern")
+                    .attr("id", `avatar-right-${d.data.id}`)
+                    .attr("height", 1)
+                    .attr("width", 1)
+                    .attr("patternUnits", "objectBoundingBox");
+                
+                const image2 = pattern2.append("image")
+                    .attr("width", 40)
+                    .attr("height", 40)
+                    .attr("preserveAspectRatio", "xMidYMid slice");
 
-            // Crear patrón para persona 2
-            defs.append("pattern")
-                .attr("id", `avatar-right-${d.data.id}`)
-                .attr("height", 1)
-                .attr("width", 1)
-                .attr("patternUnits", "objectBoundingBox")
-                .append("image")
-                .attr("href", getDefaultImage(persona2Node))
-                .attr("width", 40)
-                .attr("height", 40)
-                .attr("preserveAspectRatio", "xMidYMid slice");
-        } else {
-            // Patrón normal para nodos individuales
-            defs.append("pattern")
-                .attr("id", `avatar-${d.data.id}`)
-                .attr("height", 1)
-                .attr("width", 1)
-                .attr("patternUnits", "objectBoundingBox")
-                .append("image")
-                .attr("href", getDefaultImage(d.data))
-                .attr("width", 40)
-                .attr("height", 40)
-                .attr("preserveAspectRatio", "xMidYMid slice");
-        }
-    });
+                // Obtener las rutas de las imágenes
+                const img1Path = getDefaultImage(persona1Node);
+                const img2Path = getDefaultImage(persona2Node);
 
-    // Primero dibujar todos los enlaces
-    const link = svg.append("g")
-        .attr("class", "links-group")
-        .selectAll(".link")
-        .data(links)
-        .join("path")
-        .attr("class", "link")
-        .attr("d", d => {
-            // Si el destino es un nodo de relación, dibuja una línea recta
-            if (d.target.data.isRelationship) {
-                return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+                // Verificar si las imágenes existen y establecer las rutas correspondientes
+                const [img1Exists, img2Exists] = await Promise.all([
+                    checkImageExists(img1Path),
+                    checkImageExists(img2Path)
+                ]);
+
+                const familyName = getFamilyNameFromPath();
+                const basePath = getBasePath();
+
+                image1.attr("href", img1Exists ? img1Path : 
+                    `${basePath}/families/${familyName}/images/default-avatar-${persona1Node.sex === 'M' ? 'male' : 'female'}.png`);
+                image2.attr("href", img2Exists ? img2Path : 
+                    `${basePath}/families/${familyName}/images/default-avatar-${persona2Node.sex === 'M' ? 'male' : 'female'}.png`);
+            } else {
+                // Patrón normal para nodos individuales
+                const pattern = defs.append("pattern")
+                    .attr("id", `avatar-${d.data.id}`)
+                    .attr("height", 1)
+                    .attr("width", 1)
+                    .attr("patternUnits", "objectBoundingBox");
+                
+                const image = pattern.append("image")
+                    .attr("width", 40)
+                    .attr("height", 40)
+                    .attr("preserveAspectRatio", "xMidYMid slice");
+
+                // Obtener la ruta de la imagen
+                const imgPath = getDefaultImage(d.data);
+                
+                // Verificar si la imagen existe
+                const imgExists = await checkImageExists(imgPath);
+                
+                const familyName = getFamilyNameFromPath();
+                const basePath = getBasePath();
+
+                // Establecer la ruta correspondiente
+                image.attr("href", imgExists ? imgPath : 
+                    `${basePath}/families/${familyName}/images/default-avatar-${d.data.sex === 'M' ? 'male' : 'female'}.png`);
             }
-            // Para los demás casos (conexiones con hijos), usa la línea vertical
-            return d3.linkVertical()
-                .x(d => d.x)
-                .y(d => d.y)(d);
-        })
-        .attr("fill", "none")
-        .attr("stroke", "#ccc")
-        .attr("stroke-width", 2);
+        }
+    };
 
-    // Después dibujar todos los nodos
-    const nodesGroup = svg.append("g")
-        .attr("class", "nodes-group");
+    // Crear los patrones y luego continuar con el resto de la visualización
+    createPatterns().then(() => {
+        // Primero dibujar todos los enlaces
+        const link = svg.append("g")
+            .attr("class", "links-group")
+            .selectAll(".link")
+            .data(links)
+            .join("path")
+            .attr("class", "link")
+            .attr("d", d => {
+                // Si el destino es un nodo de relación, dibuja una línea recta
+                if (d.target.data.isRelationship) {
+                    return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+                }
+                // Para los demás casos (conexiones con hijos), usa la línea vertical
+                return d3.linkVertical()
+                    .x(d => d.x)
+                    .y(d => d.y)(d);
+            })
+            .attr("fill", "none")
+            .attr("stroke", "#ccc")
+            .attr("stroke-width", 2);
 
-    // Actualizar los nodos
-    const node = nodesGroup.selectAll(".node")
-        .data(nodes)
-        .join("g")
-        .attr("class", d => `node ${d.data.isRelationship ? 'relationship' : ''}`)
-        .attr("transform", d => `translate(${d.x},${d.y})`);
+        // Después dibujar todos los nodos
+        const nodesGroup = svg.append("g")
+            .attr("class", "nodes-group");
 
-    // Agregar flechas para los enlaces que van hacia nodos de relación
-    svg.selectAll(".arrow")
-        .remove();
+        // Actualizar los nodos
+        const node = nodesGroup.selectAll(".node")
+            .data(nodes)
+            .join("g")
+            .attr("class", d => `node ${d.data.isRelationship ? 'relationship' : ''}`)
+            .attr("transform", d => `translate(${d.x},${d.y})`);
 
-    // Agregar nodos de relación (dos círculos unidos)
-    node.filter(d => d.data.isRelationship)
-        .each(function(d) {
-            const g = d3.select(this);
-            
-            // Círculo izquierdo (solo visual)
-            g.append("circle")
-                .attr("cx", -35)
-                .attr("r", 20)
-                .style("fill", `url(#avatar-left-${d.data.id})`)
-                .style("stroke", "#1a73e8")
-                .style("stroke-width", "3px")
-                .style("z-index", 3)
-                .style("pointer-events", "all")
-                .on("mouseover", function(event) {
-                    const [persona1] = d.data.name.split(" y ");
-                    const persona1Node = familyData.nodes.find(n => n.name === persona1);
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`<strong>${persona1Node.name}</strong><br>
-                                <span class="birth-date">Nacimiento: ${formatDate(persona1Node.birthDate)}<br>
-                                Edad: ${getAge(persona1Node.birthDate)} años</span>`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
+        // Agregar flechas para los enlaces que van hacia nodos de relación
+        svg.selectAll(".arrow")
+            .remove();
 
-            // Línea de unión (solo visual)
-            g.append("line")
-                .attr("x1", -15)
-                .attr("y1", 0)
-                .attr("x2", 15)
-                .attr("y2", 0)
-                .style("stroke", "#1a73e8")
-                .style("stroke-width", "3px")
-                .style("pointer-events", "none");
+        // Agregar nodos de relación (dos círculos unidos)
+        node.filter(d => d.data.isRelationship)
+            .each(function(d) {
+                const g = d3.select(this);
+                
+                // Círculo izquierdo (solo visual)
+                g.append("circle")
+                    .attr("cx", -35)
+                    .attr("r", 20)
+                    .style("fill", `url(#avatar-left-${d.data.id})`)
+                    .style("stroke", "#1a73e8")
+                    .style("stroke-width", "3px")
+                    .style("z-index", 3)
+                    .style("pointer-events", "all")
+                    .on("mouseover", function(event) {
+                        const [persona1] = d.data.name.split(" y ");
+                        const persona1Node = familyData.nodes.find(n => n.name === persona1);
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html(`<strong>${persona1Node.name}</strong><br>
+                                    <span class="birth-date">Nacimiento: ${formatDate(persona1Node.birthDate)}<br>
+                                    Edad: ${getAge(persona1Node.birthDate)} años</span>`)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
 
-            // Círculo derecho (solo visual)
-            g.append("circle")
-                .attr("cx", 35)
-                .attr("r", 20)
-                .style("fill", `url(#avatar-right-${d.data.id})`)
-                .style("stroke", "#1a73e8")
-                .style("stroke-width", "3px")
-                .style("z-index", 3)
-                .style("pointer-events", "all")
-                .on("mouseover", function(event) {
-                    const [, persona2] = d.data.name.split(" y ");
-                    const persona2Node = familyData.nodes.find(n => n.name === persona2);
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`<strong>${persona2Node.name}</strong><br>
-                                <span class="birth-date">Nacimiento: ${formatDate(persona2Node.birthDate)}<br>
-                                Edad: ${getAge(persona2Node.birthDate)} años</span>`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
+                // Línea de unión (solo visual)
+                g.append("line")
+                    .attr("x1", -15)
+                    .attr("y1", 0)
+                    .attr("x2", 15)
+                    .attr("y2", 0)
+                    .style("stroke", "#1a73e8")
+                    .style("stroke-width", "3px")
+                    .style("pointer-events", "none");
 
-            // Icono de anillos en el centro (nodo interactivo)
-            const ringIcon = g.append("text")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("dy", "0.3em")
-                .attr("text-anchor", "middle")
-                .style("font-size", "14px")
-                .style("cursor", "pointer")
-                .style("pointer-events", "all")
-                .text("💍")
-                .on("click", function(event) {
-                    event.stopPropagation();
-                    if (d.children) {
-                        d._children = d.children;
-                        d.children = null;
-                    } else if (d._children) {
-                        d.children = d._children;
-                        d._children = null;
-                    }
-                    update(d);
-                })
-                .on("mouseover", function(event, d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    let tooltipContent = `<strong>Fecha de celebración:</strong><br>
-                                        <span class="celebration-date">${formatDate(d.data.celebrationDate)}</span>`;
-                    if (d.children || d._children) {
-                        tooltipContent += '<br><span class="hint">(Click para expandir/colapsar)</span>';
-                    }
-                    tooltip.html(tooltipContent)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-        });
+                // Círculo derecho (solo visual)
+                g.append("circle")
+                    .attr("cx", 35)
+                    .attr("r", 20)
+                    .style("fill", `url(#avatar-right-${d.data.id})`)
+                    .style("stroke", "#1a73e8")
+                    .style("stroke-width", "3px")
+                    .style("z-index", 3)
+                    .style("pointer-events", "all")
+                    .on("mouseover", function(event) {
+                        const [, persona2] = d.data.name.split(" y ");
+                        const persona2Node = familyData.nodes.find(n => n.name === persona2);
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html(`<strong>${persona2Node.name}</strong><br>
+                                    <span class="birth-date">Nacimiento: ${formatDate(persona2Node.birthDate)}<br>
+                                    Edad: ${getAge(persona2Node.birthDate)} años</span>`)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
 
-    // Agregar círculos con imágenes a los nodos normales
-    node.filter(d => !d.data.isRelationship)
-        .append("circle")
-        .attr("r", 20)
-        .style("fill", d => `url(#avatar-${d.data.id})`)
-        .style("stroke", d => (d.children || d._children) ? "#1a73e8" : "#ccc")
-        .style("stroke-width", "3px")
-        .style("cursor", "pointer")
-        .style("z-index", 2)
-        .on("click", click)
-        .on("mouseover", function(event, d) {
-            tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-            tooltip.html(updateTooltip(d))
-                .style("left", (event.pageX + 10) + "px")
-                .style("top", (event.pageY - 28) + "px");
-        })
-        .on("mouseout", function() {
-            tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
-        });
+                // Icono de anillos en el centro (nodo interactivo)
+                const ringIcon = g.append("text")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("dy", "0.3em")
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "14px")
+                    .style("cursor", "pointer")
+                    .style("pointer-events", "all")
+                    .text("💍")
+                    .on("click", function(event) {
+                        event.stopPropagation();
+                        if (d.children) {
+                            d._children = d.children;
+                            d.children = null;
+                        } else if (d._children) {
+                            d.children = d._children;
+                            d._children = null;
+                        }
+                        update(d);
+                    })
+                    .on("mouseover", function(event, d) {
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        let tooltipContent = `<strong>Fecha de celebración:</strong><br>
+                                            <span class="celebration-date">${formatDate(d.data.celebrationDate)}</span>`;
+                        if (d.children || d._children) {
+                            tooltipContent += '<br><span class="hint">(Click para expandir/colapsar)</span>';
+                        }
+                        tooltip.html(tooltipContent)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
+            });
+
+        // Agregar círculos con imágenes a los nodos normales
+        node.filter(d => !d.data.isRelationship)
+            .append("circle")
+            .attr("r", 20)
+            .style("fill", d => `url(#avatar-${d.data.id})`)
+            .style("stroke", d => (d.children || d._children) ? "#1a73e8" : "#ccc")
+            .style("stroke-width", "3px")
+            .style("cursor", "pointer")
+            .style("z-index", 2)
+            .on("click", click)
+            .on("mouseover", function(event, d) {
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(updateTooltip(d))
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+    });
 }
 
 // Función para obtener el nombre de la familia del query param

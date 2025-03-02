@@ -1,99 +1,49 @@
 {
     "nodes": [
         {
-            "id": "rel_5_6",
-            "name": "Antonio Pérez y María García",
-            "type": "marriage",
-            "celebrationDate": "1945-06-30",
+            "id": "jose_pulido",
+            "name": "José Pulido",
+            "birthDate": "1950-01-12",
+            "sex": "M",
+            "type": "person"
+        },
+        {
+            "id": "dolores_molina",
+            "name": "Dolores Molina",
+            "birthDate": "1930-12-12",
+            "sex": "F",
+            "type": "person"
+        },
+        {
+            "id": "jose_dolores_relationship",
+            "name": "José Pulido y Dolores Molina",
+            "type": "relationship",
             "isRelationship": true,
-            "parentId": null
+            "celebrationDate": "1960-01-01"
         },
         {
-            "id": "5",
-            "name": "Antonio Pérez",
-            "birthDate": "1925-01-05",
-            "parentId": "rel_5_6",
-            "sex": "M"
+            "id": "agustin_pulido_molina",
+            "name": "Agustín Pulido Molina",
+            "birthDate": "1957-02-08",
+            "sex": "M",
+            "type": "person",
+            "parentId": "jose_dolores_relationship"
         },
         {
-            "id": "6",
-            "name": "María García",
-            "birthDate": "1928-09-18",
-            "parentId": "rel_5_6",
-            "sex": "F"
+            "id": "dolores_pulido_molina",
+            "name": "Dolores Pulido Molina",
+            "birthDate": "1958-01-01",
+            "sex": "F",
+            "type": "person",
+            "parentId": "jose_dolores_relationship"
         },
         {
-            "id": "1",
-            "name": "José Pérez",
-            "birthDate": "1950-03-15",
-            "parentId": "rel_5_6",
-            "sex": "M"
-        },
-        {
-            "id": "7",
-            "name": "Manuel Rodríguez",
-            "birthDate": "1930-04-12",
-            "parentId": "rel_5_6",
-            "sex": "M"
-        },
-        {
-            "id": "8",
-            "name": "Carmen López",
-            "birthDate": "1932-12-25",
-            "parentId": "rel_5_6",
-            "sex": "F"
-        },
-        {
-            "id": "2",
-            "name": "Dolores Rodríguez",
-            "birthDate": "1952-07-22",
-            "parentId": "rel_5_6",
-            "sex": "F"
-        },
-        {
-            "id": "rel_1_2",
-            "name": "José Pérez y Dolores Rodríguez",
-            "type": "marriage",
-            "celebrationDate": "1975-09-15",
-            "isRelationship": true,
-            "parentId": "rel_5_6"
-        },
-        {
-            "id": "3",
-            "name": "Ana Pérez",
-            "birthDate": "1980-05-10",
-            "parentId": "rel_1_2",
-            "sex": "F"
-        },
-        {
-            "id": "4",
-            "name": "Carlos Pérez",
-            "birthDate": "1982-11-30",
-            "parentId": "rel_1_2",
-            "sex": "M"
-        },
-        {
-            "id": "9",
-            "name": "Luis Martínez",
-            "birthDate": "1978-08-15",
-            "parentId": "rel_5_6",
-            "sex": "M"
-        },
-        {
-            "id": "rel_3_9",
-            "name": "Ana Pérez y Luis Martínez",
-            "type": "marriage",
-            "celebrationDate": "2008-03-22",
-            "isRelationship": true,
-            "parentId": "rel_1_2"
-        },
-        {
-            "id": "10",
-            "name": "Sara Pérez",
-            "birthDate": "2010-06-20",
-            "parentId": "rel_3_9",
-            "sex": "F"
+            "id": "pilar_pulido_molina",
+            "name": "Pilar Pulido Molina",
+            "birthDate": "1959-01-01",
+            "sex": "F",
+            "type": "person",
+            "parentId": "jose_dolores_relationship"
         }
-    ],
-    "relationships": []
+    ]
 } 
