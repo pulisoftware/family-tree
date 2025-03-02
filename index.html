@@ -11,11 +11,15 @@
     </script>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="main-container">
         <div class="tree-section">
-            <h1 id="family-title">Árbol Genealógico</h1>
+            <div class="header-container">
+                <h1 id="family-title">Árbol Genealógico</h1>
+                <button id="export-tree" aria-label="Exportar árbol como imagen">💾</button>
+            </div>
             <div id="tree-container"></div>
         </div>
         <div class="calendar-section">

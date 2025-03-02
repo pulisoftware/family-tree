@@ -675,6 +675,101 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('prev-month')?.addEventListener('click', previousMonth);
     document.getElementById('next-month')?.addEventListener('click', nextMonth);
     
+    // Función para exportar el árbol como imagen
+    async function exportTreeAsImage() {
+        const treeContainer = document.getElementById('tree-container');
+        const exportButton = document.getElementById('export-tree');
+        
+        try {
+            // Cambiar el texto del botón para indicar que está procesando
+            exportButton.textContent = '⏳';
+            exportButton.style.cursor = 'wait';
+            
+            // Crear una copia del SVG
+            const svgElement = treeContainer.querySelector('svg');
+            const svgClone = svgElement.cloneNode(true);
+            
+            // Obtener el viewBox actual
+            const viewBox = svgElement.getAttribute('viewBox').split(' ').map(Number);
+            const width = viewBox[2];
+            const height = viewBox[3];
+            
+            // Configurar el SVG clonado
+            svgClone.setAttribute('width', width);
+            svgClone.setAttribute('height', height);
+            
+            // Convertir todos los patrones de imagen a imágenes embebidas
+            const patterns = svgClone.querySelectorAll('pattern image');
+            await Promise.all(Array.from(patterns).map(async (img) => {
+                const imageUrl = img.getAttribute('href');
+                try {
+                    const response = await fetch(imageUrl);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    await new Promise((resolve, reject) => {
+                        reader.onload = () => {
+                            img.setAttribute('href', reader.result);
+                            resolve();
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (error) {
+                    console.error('Error al cargar imagen:', error);
+                }
+            }));
+            
+            // Convertir SVG a string
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svgClone);
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            // Crear imagen desde SVG
+            const img = new Image();
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = svgUrl;
+            });
+            
+            // Crear canvas y dibujar la imagen
+            const canvas = document.createElement('canvas');
+            canvas.width = width * 2; // Doble resolución
+            canvas.height = height * 2;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(2, 2); // Escalar para mejor calidad
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convertir a imagen y descargar
+            const image = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            const familyName = getFamilyNameFromPath() || 'familia';
+            link.download = `arbol-genealogico-${familyName}-${new Date().toISOString().split('T')[0]}.png`;
+            link.href = image;
+            link.click();
+            
+            // Limpiar recursos
+            URL.revokeObjectURL(svgUrl);
+            
+            // Restaurar el botón
+            exportButton.textContent = '💾';
+            exportButton.style.cursor = 'pointer';
+        } catch (error) {
+            console.error('Error al exportar el árbol:', error);
+            exportButton.textContent = '❌';
+            setTimeout(() => {
+                exportButton.textContent = '💾';
+                exportButton.style.cursor = 'pointer';
+            }, 2000);
+        }
+    }
+    
+    // Añadir event listener para el botón de exportación
+    document.getElementById('export-tree')?.addEventListener('click', exportTreeAsImage);
+    
     // Manejar el toggle del calendario en móvil
     const toggleButton = document.getElementById('toggle-calendar');
     const calendarSection = document.querySelector('.calendar-section');
