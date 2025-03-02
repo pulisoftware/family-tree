@@ -1,0 +1,304 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+.main-container {
+    display: flex;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+    gap: 20px;
+}
+
+.tree-section {
+    flex: 1;
+    min-width: 0;
+}
+
+.calendar-section {
+    width: 350px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h1, h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #1a73e8;
+}
+
+h2 {
+    font-size: 1.5em;
+}
+
+#tree-container {
+    width: 100%;
+    height: 800px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: auto;
+}
+
+.controls {
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #1557b0;
+}
+
+.node {
+    cursor: pointer;
+}
+
+.node circle {
+    fill: #fff;
+    stroke: #1a73e8;
+    stroke-width: 3px;
+    transition: all 0.3s ease;
+}
+
+.node circle:hover {
+    transform: scale(1.1);
+}
+
+.node text {
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+}
+
+.node.relationship rect {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.node.relationship rect:hover {
+    transform: scale(1.1);
+}
+
+.node.relationship text {
+    pointer-events: none;
+}
+
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+    transition: stroke 0.3s ease;
+}
+
+.link:hover {
+    stroke: #1a73e8;
+}
+
+.link-path {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+}
+
+.arrow {
+    fill: #ccc;
+    stroke: none;
+}
+
+.tooltip {
+    position: absolute;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1000;
+    line-height: 1.4;
+}
+
+.tooltip .birth-date {
+    color: #8ab4f8;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Estilos del calendario */
+#calendar-container {
+    width: 100%;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-header button {
+    padding: 5px 10px;
+    font-size: 18px;
+    background-color: transparent;
+    color: #1a73e8;
+    border: 1px solid #1a73e8;
+}
+
+.calendar-header button:hover {
+    background-color: #e8f0fe;
+}
+
+#calendar-title {
+    font-size: 1.2em;
+    color: #1a73e8;
+    margin: 0;
+}
+
+.calendar-grid {
+    width: 100%;
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.weekdays div {
+    padding: 8px 5px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+#calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: default;
+    position: relative;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    padding: 5px;
+}
+
+.calendar-day:not(:empty):hover {
+    background-color: #f0f2f5;
+}
+
+.calendar-day.has-birthday {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+    font-weight: bold;
+    border: 1px solid #1a73e8;
+}
+
+.calendar-day.has-birthday::after {
+    content: '🎂';
+    font-size: 10px;
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+}
+
+.calendar-day.today {
+    border: 2px solid #1a73e8;
+    font-weight: bold;
+}
+
+.calendar-day.other-month {
+    color: #bbb;
+}
+
+/* Tooltip para los cumpleaños */
+.birthday-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1000;
+    pointer-events: none;
+    white-space: nowrap;
+    display: none;
+}
+
+.calendar-day:hover .birthday-tooltip {
+    display: block;
+}
+
+/* Estilos para mensajes de error */
+.error-container {
+    padding: 20px;
+    margin: 20px;
+    border: 2px solid #ff4444;
+    border-radius: 8px;
+    background-color: #fff5f5;
+}
+
+.error {
+    color: #cc0000;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.error-details {
+    color: #666;
+    font-family: monospace;
+    padding: 10px;
+    background-color: #f8f8f8;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.error-help {
+    color: #333;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.error-container ul {
+    margin-top: 5px;
+    padding-left: 25px;
+}
+
+.error-container li {
+    color: #666;
+    margin: 5px 0;
+    line-height: 1.4;
+} 

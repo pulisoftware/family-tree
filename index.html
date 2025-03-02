@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árbol Genealógico</title>
+    <script>
+        // Configurar la ruta base dinámicamente
+        const baseUrl = window.location.hostname === 'localhost' ? '/' : '/family-tree/';
+        document.write(`<base href="${baseUrl}">`);
+    </script>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="main-container">
+        <div class="tree-section">
+            <h1 id="family-title">Árbol Genealógico</h1>
+            <div id="tree-container"></div>
+        </div>
+        <div class="calendar-section">
+            <h2>Calendario de Cumpleaños</h2>
+            <div id="calendar-container">
+                <div class="calendar-header">
+                    <button id="prev-month">&lt;</button>
+                    <h3 id="calendar-title"></h3>
+                    <button id="next-month">&gt;</button>
+                </div>
+                <div class="weekdays">
+                    <div>Dom</div>
+                    <div>Lun</div>
+                    <div>Mar</div>
+                    <div>Mié</div>
+                    <div>Jue</div>
+                    <div>Vie</div>
+                    <div>Sáb</div>
+                </div>
+                <div id="calendar-days"></div>
+            </div>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+</html> 
