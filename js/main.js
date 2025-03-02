@@ -689,14 +689,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const svgElement = treeContainer.querySelector('svg');
             const svgClone = svgElement.cloneNode(true);
             
-            // Obtener el viewBox actual
+            // Obtener el viewBox actual y calcular dimensiones
             const viewBox = svgElement.getAttribute('viewBox').split(' ').map(Number);
-            const width = viewBox[2];
-            const height = viewBox[3];
+            const width = Math.abs(viewBox[2]);
+            const height = Math.abs(viewBox[3]);
+            
+            // Ajustar escala según el dispositivo
+            const isMobile = window.innerWidth <= 768;
+            const scale = isMobile ? 1 : 2; // Menor escala en móviles para evitar problemas de memoria
             
             // Configurar el SVG clonado
             svgClone.setAttribute('width', width);
             svgClone.setAttribute('height', height);
+            svgClone.style.background = 'white';
+            
+            // Asegurarse de que todos los elementos sean visibles
+            const allElements = svgClone.querySelectorAll('*');
+            allElements.forEach(el => {
+                if (el.style) {
+                    el.style.display = '';
+                    el.style.visibility = 'visible';
+                }
+            });
             
             // Convertir todos los patrones de imagen a imágenes embebidas
             const patterns = svgClone.querySelectorAll('pattern image');
@@ -719,9 +733,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }));
             
-            // Convertir SVG a string
+            // Convertir SVG a string con estilos inline
             const serializer = new XMLSerializer();
-            const svgString = serializer.serializeToString(svgClone);
+            let svgString = serializer.serializeToString(svgClone);
+            
+            // Asegurarse de que los estilos CSS estén incluidos
+            const styleSheet = document.styleSheets[0];
+            let cssText = '';
+            for (let rule of styleSheet.cssRules) {
+                cssText += rule.cssText;
+            }
+            svgString = svgString.replace('</defs>', `<style>${cssText}</style></defs>`);
+            
+            // Crear Blob y URL
             const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
             const svgUrl = URL.createObjectURL(svgBlob);
             
@@ -733,23 +757,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.src = svgUrl;
             });
             
-            // Crear canvas y dibujar la imagen
+            // Crear canvas con dimensiones ajustadas
             const canvas = document.createElement('canvas');
-            canvas.width = width * 2; // Doble resolución
-            canvas.height = height * 2;
+            canvas.width = width * scale;
+            canvas.height = height * scale;
             const ctx = canvas.getContext('2d');
+            
+            // Dibujar fondo blanco
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.scale(2, 2); // Escalar para mejor calidad
+            
+            // Aplicar escala y dibujar imagen
+            ctx.scale(scale, scale);
             ctx.drawImage(img, 0, 0, width, height);
             
-            // Convertir a imagen y descargar
-            const image = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
+            // En móviles, comprimir la imagen para reducir el tamaño del archivo
+            let imageQuality = isMobile ? 0.8 : 0.95;
+            const image = canvas.toDataURL('image/png', imageQuality);
+            
+            // Crear nombre de archivo
             const familyName = getFamilyNameFromPath() || 'familia';
-            link.download = `arbol-genealogico-${familyName}-${new Date().toISOString().split('T')[0]}.png`;
-            link.href = image;
-            link.click();
+            const date = new Date().toISOString().split('T')[0];
+            const fileName = `arbol-genealogico-${familyName}-${date}.png`;
+            
+            // En móviles, usar un método alternativo para descargar
+            if (isMobile) {
+                const blob = await (await fetch(image)).blob();
+                if (navigator.share) {
+                    try {
+                        const file = new File([blob], fileName, { type: 'image/png' });
+                        await navigator.share({
+                            files: [file],
+                            title: 'Árbol Genealógico',
+                        });
+                    } catch (error) {
+                        // Si falla el share, intentar descarga directa
+                        const link = document.createElement('a');
+                        link.download = fileName;
+                        link.href = image;
+                        link.click();
+                    }
+                } else {
+                    // Fallback para navegadores que no soportan Web Share API
+                    const link = document.createElement('a');
+                    link.download = fileName;
+                    link.href = image;
+                    link.click();
+                }
+            } else {
+                // En desktop, usar el método normal de descarga
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = image;
+                link.click();
+            }
             
             // Limpiar recursos
             URL.revokeObjectURL(svgUrl);
