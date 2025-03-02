@@ -448,21 +448,7 @@ function update(source) {
         .each(function(d) {
             const g = d3.select(this);
             
-            // Añadir evento de clic al grupo
-            g.style("cursor", "pointer")
-                .on("click", function(event) {
-                    event.stopPropagation();
-                    if (d.children) {
-                        d._children = d.children;
-                        d.children = null;
-                    } else if (d._children) {
-                        d.children = d._children;
-                        d._children = null;
-                    }
-                    update(d);
-                });
-            
-            // Círculo izquierdo
+            // Círculo izquierdo (solo visual)
             g.append("circle")
                 .attr("cx", -35)
                 .attr("r", 20)
@@ -470,6 +456,7 @@ function update(source) {
                 .style("stroke", "#1a73e8")
                 .style("stroke-width", "3px")
                 .style("z-index", 3)
+                .style("pointer-events", "all")
                 .on("mouseover", function(event) {
                     const [persona1] = d.data.name.split(" y ");
                     const persona1Node = familyData.nodes.find(n => n.name === persona1);
@@ -488,23 +475,64 @@ function update(source) {
                         .style("opacity", 0);
                 });
 
-            // Línea de unión
+            // Línea de unión (solo visual)
             g.append("line")
                 .attr("x1", -15)
                 .attr("y1", 0)
                 .attr("x2", 15)
                 .attr("y2", 0)
                 .style("stroke", "#1a73e8")
-                .style("stroke-width", "3px");
+                .style("stroke-width", "3px")
+                .style("pointer-events", "none");
 
-            // Icono de anillos en el centro
+            // Círculo derecho (solo visual)
+            g.append("circle")
+                .attr("cx", 35)
+                .attr("r", 20)
+                .style("fill", `url(#avatar-right-${d.data.id})`)
+                .style("stroke", "#1a73e8")
+                .style("stroke-width", "3px")
+                .style("z-index", 3)
+                .style("pointer-events", "all")
+                .on("mouseover", function(event) {
+                    const [, persona2] = d.data.name.split(" y ");
+                    const persona2Node = familyData.nodes.find(n => n.name === persona2);
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`<strong>${persona2Node.name}</strong><br>
+                                <span class="birth-date">Nacimiento: ${formatDate(persona2Node.birthDate)}<br>
+                                Edad: ${getAge(persona2Node.birthDate)} años</span>`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+
+            // Icono de anillos en el centro (nodo interactivo)
             const ringIcon = g.append("text")
                 .attr("x", 0)
                 .attr("y", 0)
                 .attr("dy", "0.3em")
                 .attr("text-anchor", "middle")
                 .style("font-size", "14px")
+                .style("cursor", "pointer")
+                .style("pointer-events", "all")
                 .text("💍")
+                .on("click", function(event) {
+                    event.stopPropagation();
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    } else if (d._children) {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                    update(d);
+                })
                 .on("mouseover", function(event, d) {
                     tooltip.transition()
                         .duration(200)
@@ -515,32 +543,6 @@ function update(source) {
                         tooltipContent += '<br><span class="hint">(Click para expandir/colapsar)</span>';
                     }
                     tooltip.html(tooltipContent)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-
-            // Círculo derecho
-            g.append("circle")
-                .attr("cx", 35)
-                .attr("r", 20)
-                .style("fill", `url(#avatar-right-${d.data.id})`)
-                .style("stroke", "#1a73e8")
-                .style("stroke-width", "3px")
-                .style("z-index", 3)
-                .on("mouseover", function(event) {
-                    const [, persona2] = d.data.name.split(" y ");
-                    const persona2Node = familyData.nodes.find(n => n.name === persona2);
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`<strong>${persona2Node.name}</strong><br>
-                                <span class="birth-date">Nacimiento: ${formatDate(persona2Node.birthDate)}<br>
-                                Edad: ${getAge(persona2Node.birthDate)} años</span>`)
                         .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 28) + "px");
                 })
@@ -641,13 +643,71 @@ async function loadFamilyData() {
     }
 }
 
-// Modificar el event listener para solo manejar el calendario
+// Función para expandir todo el árbol
+function expandAll(node) {
+    if (node._children) {
+        node.children = node._children;
+        node._children = null;
+        node.children.forEach(expandAll);
+    }
+    if (node.children) {
+        node.children.forEach(expandAll);
+    }
+}
+
+// Función para colapsar todo el árbol
+function collapseAll(node) {
+    if (node.children) {
+        node._children = node.children;
+        node.children = null;
+        node._children.forEach(collapseAll);
+    }
+    if (node._children) {
+        node._children.forEach(collapseAll);
+    }
+}
+
+// Modificar el event listener para manejar el calendario y el toggle
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Iniciando aplicación...');
     
     // Conectar los botones del calendario
     document.getElementById('prev-month')?.addEventListener('click', previousMonth);
     document.getElementById('next-month')?.addEventListener('click', nextMonth);
+    
+    // Manejar el toggle del calendario en móvil
+    const toggleButton = document.getElementById('toggle-calendar');
+    const calendarSection = document.querySelector('.calendar-section');
+    
+    toggleButton?.addEventListener('click', () => {
+        calendarSection.classList.toggle('show');
+    });
+    
+    // Cerrar el calendario al hacer click fuera de él en móvil
+    document.addEventListener('click', (event) => {
+        const isCalendarClick = calendarSection.contains(event.target);
+        const isToggleClick = toggleButton.contains(event.target);
+        
+        if (!isCalendarClick && !isToggleClick && window.innerWidth <= 700) {
+            calendarSection.classList.remove('show');
+        }
+    });
+
+    // Manejar el toggle del árbol
+    const toggleTreeButton = document.getElementById('toggle-tree');
+    let isExpanded = true;
+
+    toggleTreeButton?.addEventListener('click', () => {
+        if (isExpanded) {
+            collapseAll(root);
+            toggleTreeButton.textContent = '⤡'; // Flechas hacia dentro
+        } else {
+            expandAll(root);
+            toggleTreeButton.textContent = '⤢'; // Flechas hacia fuera
+        }
+        isExpanded = !isExpanded;
+        update(root);
+    });
     
     // Cargar los datos
     loadFamilyData();
