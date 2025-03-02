@@ -696,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Ajustar escala según el dispositivo
             const isMobile = window.innerWidth <= 768;
-            const scale = isMobile ? 1 : 2; // Menor escala en móviles para evitar problemas de memoria
+            const scale = isMobile ? 1 : 2;
             
             // Configurar el SVG clonado
             svgClone.setAttribute('width', width);
@@ -771,46 +771,79 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.scale(scale, scale);
             ctx.drawImage(img, 0, 0, width, height);
             
-            // En móviles, comprimir la imagen para reducir el tamaño del archivo
-            let imageQuality = isMobile ? 0.8 : 0.95;
-            const image = canvas.toDataURL('image/png', imageQuality);
-            
             // Crear nombre de archivo
             const familyName = getFamilyNameFromPath() || 'familia';
             const date = new Date().toISOString().split('T')[0];
             const fileName = `arbol-genealogico-${familyName}-${date}.png`;
             
-            // En móviles, usar un método alternativo para descargar
-            if (isMobile) {
-                const blob = await (await fetch(image)).blob();
-                if (navigator.share) {
-                    try {
-                        const file = new File([blob], fileName, { type: 'image/png' });
-                        await navigator.share({
-                            files: [file],
-                            title: 'Árbol Genealógico',
-                        });
-                    } catch (error) {
-                        // Si falla el share, intentar descarga directa
+            // Convertir a Blob con calidad ajustada según dispositivo
+            canvas.toBlob(async (blob) => {
+                try {
+                    if (isMobile) {
+                        // En móviles, abrir en nueva pestaña
+                        const imageUrl = URL.createObjectURL(blob);
+                        const newTab = window.open();
+                        if (newTab) {
+                            newTab.document.write(`
+                                <html>
+                                    <head>
+                                        <title>${fileName}</title>
+                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                        <style>
+                                            body { margin: 0; padding: 16px; background: #f0f2f5; }
+                                            .container { 
+                                                max-width: 100%; 
+                                                background: white;
+                                                padding: 16px;
+                                                border-radius: 8px;
+                                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                            }
+                                            img { 
+                                                max-width: 100%; 
+                                                height: auto; 
+                                                display: block;
+                                                margin: 0 auto 16px;
+                                            }
+                                            .download-btn {
+                                                display: block;
+                                                width: 100%;
+                                                padding: 12px;
+                                                background: #1a73e8;
+                                                color: white;
+                                                border: none;
+                                                border-radius: 4px;
+                                                font-size: 16px;
+                                                cursor: pointer;
+                                                text-align: center;
+                                                text-decoration: none;
+                                            }
+                                        </style>
+                                    </head>
+                                    <body>
+                                        <div class="container">
+                                            <img src="${imageUrl}" alt="Árbol Genealógico">
+                                            <a href="${imageUrl}" download="${fileName}" class="download-btn">
+                                                Descargar Imagen
+                                            </a>
+                                        </div>
+                                    </body>
+                                </html>
+                            `);
+                            newTab.document.close();
+                        }
+                    } else {
+                        // En desktop, descarga directa
                         const link = document.createElement('a');
                         link.download = fileName;
-                        link.href = image;
+                        link.href = URL.createObjectURL(blob);
                         link.click();
+                        URL.revokeObjectURL(link.href);
                     }
-                } else {
-                    // Fallback para navegadores que no soportan Web Share API
-                    const link = document.createElement('a');
-                    link.download = fileName;
-                    link.href = image;
-                    link.click();
+                } catch (error) {
+                    console.error('Error al procesar la imagen:', error);
+                    alert('Hubo un error al procesar la imagen. Por favor, inténtalo de nuevo.');
                 }
-            } else {
-                // En desktop, usar el método normal de descarga
-                const link = document.createElement('a');
-                link.download = fileName;
-                link.href = image;
-                link.click();
-            }
+            }, 'image/png', isMobile ? 0.8 : 0.95);
             
             // Limpiar recursos
             URL.revokeObjectURL(svgUrl);
