@@ -6,9 +6,42 @@ const height = 800 - margin.top - margin.bottom;
 const svg = d3.select("#tree-container")
     .append("svg")
     .attr("width", "100%")
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
+    .attr("height", height + margin.top + margin.bottom);
+
+// Crear el grupo principal que será arrastrable
+const mainGroup = svg.append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
+
+// Añadir comportamiento de zoom y arrastre
+const zoom = d3.zoom()
+    .scaleExtent([0.5, 2]) // Limitar el zoom entre 0.5x y 2x
+    .on("zoom", (event) => {
+        mainGroup.attr("transform", event.transform);
+    });
+
+// Aplicar zoom al SVG
+svg.call(zoom);
+
+// Centrar inicialmente el árbol
+function centerTree() {
+    const svgElement = document.querySelector("#tree-container svg");
+    const svgBox = svgElement.getBoundingClientRect();
+    const viewBox = svgElement.getAttribute("viewBox")?.split(" ").map(Number) || [0, 0, width, height];
+    
+    const scale = Math.min(
+        svgBox.width / viewBox[2],
+        svgBox.height / viewBox[3]
+    );
+    
+    const transform = d3.zoomIdentity
+        .translate(svgBox.width / 2, svgBox.height / 2)
+        .scale(scale)
+        .translate(-viewBox[2] / 2, -viewBox[3] / 2);
+    
+    svg.transition()
+        .duration(750)
+        .call(zoom.transform, transform);
+}
 
 // Crear el layout del árbol
 const tree = d3.tree()
@@ -391,25 +424,14 @@ function update(source) {
     const totalWidth = xMax - xMin;
     const totalHeight = yMax - yMin;
     
-    // Calcular el centro del árbol
-    const centerX = (xMin + xMax) / 2;
-    const centerY = (yMin + yMax) / 2;
-    
-    // Calcular el viewBox para centrar el árbol
-    const viewBoxWidth = Math.max(totalWidth + margin.left + margin.right, width);
-    const viewBoxHeight = Math.max(totalHeight + margin.top + margin.bottom, height);
-    const viewBoxX = centerX - viewBoxWidth / 2;
-    const viewBoxY = centerY - viewBoxHeight / 2;
-    
-    // Actualizar el viewBox para centrar el árbol
-    d3.select("#tree-container svg")
-        .attr("viewBox", `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+    // Actualizar el viewBox del SVG
+    svg.attr("viewBox", `${xMin - 100} ${yMin - 100} ${totalWidth + 200} ${totalHeight + 200}`);
 
-    // Limpiar el SVG antes de actualizar
-    svg.selectAll("*").remove();
+    // Limpiar el grupo principal antes de actualizar
+    mainGroup.selectAll("*").remove();
 
     // Crear elementos defs para los patrones de imagen
-    const defs = svg.append("defs");
+    const defs = mainGroup.append("defs");
 
     // Crear patrones para todos los nodos
     const createPatterns = async () => {
@@ -490,7 +512,7 @@ function update(source) {
     // Crear los patrones y luego continuar con el resto de la visualización
     createPatterns().then(() => {
         // Primero dibujar todos los enlaces
-        const link = svg.append("g")
+        const link = mainGroup.append("g")
             .attr("class", "links-group")
             .selectAll(".link")
             .data(links)
@@ -511,7 +533,7 @@ function update(source) {
             .attr("stroke-width", 2);
 
         // Después dibujar todos los nodos
-        const nodesGroup = svg.append("g")
+        const nodesGroup = mainGroup.append("g")
             .attr("class", "nodes-group");
 
         // Actualizar los nodos
@@ -522,7 +544,7 @@ function update(source) {
             .attr("transform", d => `translate(${d.x},${d.y})`);
 
         // Agregar flechas para los enlaces que van hacia nodos de relación
-        svg.selectAll(".arrow")
+        mainGroup.selectAll(".arrow")
             .remove();
 
         // Agregar nodos de relación (dos círculos unidos)
@@ -659,6 +681,9 @@ function update(source) {
                     .style("opacity", 0);
             });
     });
+
+    // Llamar a centerTree después de actualizar el árbol
+    centerTree();
 }
 
 // Función para obtener el nombre de la familia del query param
@@ -980,6 +1005,27 @@ document.addEventListener('DOMContentLoaded', () => {
         isExpanded = !isExpanded;
         update(root);
     });
+    
+    // Añadir botón de centrado
+    const centerButton = document.createElement('button');
+    centerButton.id = 'center-tree';
+    centerButton.innerHTML = '⌖';
+    centerButton.style.position = 'fixed';
+    centerButton.style.bottom = '20px';
+    centerButton.style.right = '20px';
+    centerButton.style.width = '50px';
+    centerButton.style.height = '50px';
+    centerButton.style.borderRadius = '50%';
+    centerButton.style.backgroundColor = '#1a73e8';
+    centerButton.style.color = 'white';
+    centerButton.style.border = 'none';
+    centerButton.style.fontSize = '24px';
+    centerButton.style.cursor = 'pointer';
+    centerButton.style.zIndex = '1000';
+    centerButton.title = 'Centrar árbol';
+    
+    centerButton.addEventListener('click', centerTree);
+    document.body.appendChild(centerButton);
     
     // Cargar los datos
     loadFamilyData();
