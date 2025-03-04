@@ -680,6 +680,9 @@ function update(source) {
                     .duration(500)
                     .style("opacity", 0);
             });
+
+        // Ocultar el spinner cuando todo esté cargado
+        document.getElementById('loading-spinner').style.display = 'none';
     });
 
     // Llamar a centerTree después de actualizar el árbol
@@ -779,6 +782,53 @@ function collapseAll(node) {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Iniciando aplicación...');
     
+    // Crear y añadir el spinner de carga
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.id = 'loading-spinner';
+    loadingSpinner.innerHTML = `
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Cargando árbol genealógico...</div>
+        </div>
+    `;
+    loadingSpinner.style.position = 'fixed';
+    loadingSpinner.style.top = '0';
+    loadingSpinner.style.left = '0';
+    loadingSpinner.style.width = '100%';
+    loadingSpinner.style.height = '100%';
+    loadingSpinner.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    loadingSpinner.style.display = 'flex';
+    loadingSpinner.style.justifyContent = 'center';
+    loadingSpinner.style.alignItems = 'center';
+    loadingSpinner.style.zIndex = '9999';
+    
+    const spinnerStyles = document.createElement('style');
+    spinnerStyles.textContent = `
+        .spinner-container {
+            text-align: center;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1a73e8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        .loading-text {
+            color: #1a73e8;
+            font-size: 18px;
+            font-family: Arial, sans-serif;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(spinnerStyles);
+    document.body.appendChild(loadingSpinner);
+
     // Conectar los botones del calendario
     document.getElementById('prev-month')?.addEventListener('click', previousMonth);
     document.getElementById('next-month')?.addEventListener('click', nextMonth);
