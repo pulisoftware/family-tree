@@ -40,7 +40,7 @@
         {
             "id": "pilar_pulido_molina",
             "name": "Pilar Pulido Molina",
-            "birthDate": "1959-01-01",
+            "birthDate": "1958-04-03",
             "sex": "F",
             "type": "person",
             "parentId": "jose_dolores_relationship"
@@ -48,7 +48,7 @@
         {
             "id": "modesto_jimenez_ropero",
             "name": "Modesto Jiménez Ropero",
-            "birthDate": "1959-01-01",
+            "birthDate": "1957-03-27",
             "sex": "M",
             "type": "person"
         },
@@ -59,6 +59,123 @@
             "isRelationship": true,
             "celebrationDate": "1980-01-01",
             "parentId": "jose_dolores_relationship"
+        },
+        {
+            "id": "vanesa_jimenez_pulido",
+            "name": "Vanesa Jiménez Pulido",
+            "birthDate": "1958-04-03",
+            "sex": "F",
+            "type": "person",
+            "parentId": "pilar_modesto_relationship"
+        },
+        {
+            "id": "jorge_hermosilla_perez",
+            "name": "Jorge Hermosilla Pérez",
+            "birthDate": "1957-03-27",
+            "sex": "M",
+            "type": "person"
+        },
+        {
+            "id": "vanesa_jorge_relationship",
+            "name": "Vanesa Jiménez Pulido y Jorge Hermosilla Pérez",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "-",
+            "parentId": "pilar_modesto_relationship"
+        },
+        {
+            "id": "sonia_jimenez_pulido",
+            "name": "Sonia Jiménez Pulido",
+            "birthDate": "1981-06-06",
+            "sex": "F",
+            "type": "person",
+            "parentId": "pilar_modesto_relationship"
+        },
+        {
+            "id": "roberto_rosa",
+            "name": "Roberto Rosa",
+            "birthDate": "1981-11-05",
+            "sex": "M",
+            "type": "person"
+        },
+        {
+            "id": "sonia_roberto_relationship",
+            "name": "Sonia Jiménez Pulido y Roberto Rosa",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "-",
+            "parentId": "pilar_modesto_relationship"
+        },
+        {
+            "id": "christian_rosa_jimenez",
+            "name": "Christian Rosa Jiménez",
+            "birthDate": "2008-05-09",
+            "sex": "M",
+            "type": "person",
+            "parentId": "sonia_roberto_relationship"
+        },
+        {
+            "id": "judith_rosa_jimenez",
+            "name": "Judith Rosa Jiménez",
+            "birthDate": "2011-06-20",
+            "sex": "F",
+            "type": "person",
+            "parentId": "sonia_roberto_relationship"
+        },        
+        {
+            "id": "raul_jimenez_pulido",
+            "name": "Raúl Jiménez Pulido",
+            "birthDate": "1981-06-06",
+            "sex": "M",
+            "type": "person",
+            "parentId": "pilar_modesto_relationship"
+        },
+        {
+            "id": "mari_angeles_ramirez",
+            "name": "Mari Ángeles Ramirez",
+            "birthDate": "1981-11-05",
+            "sex": "F",
+            "type": "person"
+        },
+        {
+            "id": "raul_mari_angeles_relationship",
+            "name": "Raúl Jiménez Pulido y Mari Ángeles Ramirez",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "-",
+            "parentId": "pilar_modesto_relationship"
+        },
+        {
+            "id": "iker_jimenez_ramirez",
+            "name": "Iker Jiménez Ramirez",
+            "birthDate": "2008-05-09",
+            "sex": "M",
+            "type": "person",
+            "parentId": "raul_mari_angeles_relationship"
+        },
+        {
+            "id": "raul_jimenez_ramirez",
+            "name": "Raúl Jiménez Ramirez",
+            "birthDate": "2011-06-20",
+            "sex": "M",
+            "type": "person",
+            "parentId": "raul_mari_angeles_relationship"
+        },
+        {
+            "id": "bruno_jimenez_ramirez",
+            "name": "Bruno Jiménez Ramirez",
+            "birthDate": "2008-05-09",
+            "sex": "M",
+            "type": "person",
+            "parentId": "raul_mari_angeles_relationship"
+        },
+        {
+            "id": "barbara_jimenez_ramirez",
+            "name": "Bárbara Jiménez Ramirez",
+            "birthDate": "2011-06-20",
+            "sex": "F",
+            "type": "person",
+            "parentId": "raul_mari_angeles_relationship"
         }
     ]
 } 
