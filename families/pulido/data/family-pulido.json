@@ -44,6 +44,21 @@
             "sex": "F",
             "type": "person",
             "parentId": "jose_dolores_relationship"
+        },
+        {
+            "id": "modesto_jimenez_ropero",
+            "name": "Modesto Jiménez Ropero",
+            "birthDate": "1959-01-01",
+            "sex": "M",
+            "type": "person"
+        },
+        {
+            "id": "pilar_modesto_relationship",
+            "name": "Pilar Pulido Molina y Modesto Jiménez Ropero",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "1980-01-01",
+            "parentId": "jose_dolores_relationship"
         }
     ]
 } 

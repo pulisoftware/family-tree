@@ -1,4 +1,4 @@
-const margin = { top: 40, right: 120, bottom: 40, left: 120 };
+const margin = { top: 0, right: 0, bottom: 0, left: 0 };
 const width = 1000 - margin.left - margin.right;
 const height = 800 - margin.top - margin.bottom;
 
@@ -12,8 +12,8 @@ const svg = d3.select("#tree-container")
 
 // Crear el layout del árbol
 const tree = d3.tree()
-    .nodeSize([80, 120])
-    .separation((a, b) => a.data.isRelationship && b.data.isRelationship ? 2 : 1.5);
+    .nodeSize([120, 160])
+    .separation((a, b) => a.data.isRelationship && b.data.isRelationship ? 2.5 : 2);
 
 // Variable global para almacenar los datos
 let familyData;
@@ -313,36 +313,52 @@ function processRelationships(data) {
     return { nodes, links };
 }
 
+// Función para obtener el nombre de la familia del query param
+function getFamilyNameFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const familyName = urlParams.get('family');
+    if (familyName) {
+        return familyName.toLowerCase();
+    }
+    throw new Error('No se ha especificado el nombre de la familia en la URL (use ?family=nombreFamilia)');
+}
+
 // Función para obtener la ruta base
 function getBasePath() {
     return window.location.hostname === 'localhost' ? '' : '/family-tree';
 }
 
 // Función para obtener la imagen por defecto según el sexo
-function getDefaultImage(node) {
-    const familyName = getFamilyNameFromPath();
+async function getDefaultImage(node) {
     const basePath = getBasePath();
+    const familyName = getFamilyNameFromUrl();
+    const imageFormats = ['png', 'jpeg', 'jpg'];
     
-    // Primero intentar cargar la imagen específica usando el ID
-    const specificImagePath = `${basePath}/families/${familyName}/images/${node.id}.png`;
+    // Intentar cargar la imagen específica de la persona
+    for (const format of imageFormats) {
+        const imagePath = `${basePath}/families/${familyName}/images/${node.id}.${format}`;
+        const exists = await checkImageExists(imagePath);
+        if (exists) {
+            return imagePath;
+        }
+    }
+
+    // Si no se encuentra la imagen específica, usar la imagen por defecto según el sexo
+    const defaultImage = node.sex === 'M' 
+        ? `${basePath}/images/default-avatar-male.png`
+        : `${basePath}/images/default-avatar-female.png`;
     
-    // Si no hay imagen específica, usar el avatar por defecto según el sexo
-    const defaultImagePath = node.sex === 'M' ? 
-        `${basePath}/families/${familyName}/images/default-avatar-male.png` : 
-        `${basePath}/families/${familyName}/images/default-avatar-female.png`;
-    
-    // Retornar directamente la ruta de la imagen
-    return specificImagePath;
+    return defaultImage;
 }
 
 // Función para verificar si una imagen existe
-async function checkImageExists(url) {
-    try {
-        const response = await fetch(url, { method: 'HEAD' });
-        return response.ok;
-    } catch {
-        return false;
-    }
+function checkImageExists(url) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = url;
+    });
 }
 
 // Función para actualizar el árbol
@@ -371,13 +387,23 @@ function update(source) {
     const yMin = d3.min(nodes, d => d.y);
     const yMax = d3.max(nodes, d => d.y);
     
-    // Actualizar el tamaño del SVG basado en el contenido
-    const svgWidth = xMax - xMin + margin.left + margin.right;
-    const svgHeight = yMax - yMin + margin.top + margin.bottom;
+    // Calcular dimensiones totales
+    const totalWidth = xMax - xMin;
+    const totalHeight = yMax - yMin;
+    
+    // Calcular el centro del árbol
+    const centerX = (xMin + xMax) / 2;
+    const centerY = (yMin + yMax) / 2;
+    
+    // Calcular el viewBox para centrar el árbol
+    const viewBoxWidth = Math.max(totalWidth + margin.left + margin.right, width);
+    const viewBoxHeight = Math.max(totalHeight + margin.top + margin.bottom, height);
+    const viewBoxX = centerX - viewBoxWidth / 2;
+    const viewBoxY = centerY - viewBoxHeight / 2;
     
     // Actualizar el viewBox para centrar el árbol
     d3.select("#tree-container svg")
-        .attr("viewBox", `${xMin - margin.left} ${-margin.top} ${svgWidth + margin.left} ${svgHeight + margin.top}`);
+        .attr("viewBox", `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
 
     // Limpiar el SVG antes de actualizar
     svg.selectAll("*").remove();
@@ -402,8 +428,8 @@ function update(source) {
                     .attr("patternUnits", "objectBoundingBox");
                 
                 const image1 = pattern1.append("image")
-                    .attr("width", 40)
-                    .attr("height", 40)
+                    .attr("width", 60)
+                    .attr("height", 60)
                     .attr("preserveAspectRatio", "xMidYMid slice");
                 
                 // Crear patrón para persona 2
@@ -414,13 +440,13 @@ function update(source) {
                     .attr("patternUnits", "objectBoundingBox");
                 
                 const image2 = pattern2.append("image")
-                    .attr("width", 40)
-                    .attr("height", 40)
+                    .attr("width", 60)
+                    .attr("height", 60)
                     .attr("preserveAspectRatio", "xMidYMid slice");
 
                 // Obtener las rutas de las imágenes
-                const img1Path = getDefaultImage(persona1Node);
-                const img2Path = getDefaultImage(persona2Node);
+                const img1Path = await getDefaultImage(persona1Node);
+                const img2Path = await getDefaultImage(persona2Node);
 
                 // Verificar si las imágenes existen y establecer las rutas correspondientes
                 const [img1Exists, img2Exists] = await Promise.all([
@@ -428,13 +454,10 @@ function update(source) {
                     checkImageExists(img2Path)
                 ]);
 
-                const familyName = getFamilyNameFromPath();
-                const basePath = getBasePath();
-
                 image1.attr("href", img1Exists ? img1Path : 
-                    `${basePath}/families/${familyName}/images/default-avatar-${persona1Node.sex === 'M' ? 'male' : 'female'}.png`);
+                    `${basePath}/images/default-avatar-${persona1Node.sex === 'M' ? 'male' : 'female'}.png`);
                 image2.attr("href", img2Exists ? img2Path : 
-                    `${basePath}/families/${familyName}/images/default-avatar-${persona2Node.sex === 'M' ? 'male' : 'female'}.png`);
+                    `${basePath}/images/default-avatar-${persona2Node.sex === 'M' ? 'male' : 'female'}.png`);
             } else {
                 // Patrón normal para nodos individuales
                 const pattern = defs.append("pattern")
@@ -444,12 +467,12 @@ function update(source) {
                     .attr("patternUnits", "objectBoundingBox");
                 
                 const image = pattern.append("image")
-                    .attr("width", 40)
-                    .attr("height", 40)
+                    .attr("width", 60)
+                    .attr("height", 60)
                     .attr("preserveAspectRatio", "xMidYMid slice");
 
                 // Obtener la ruta de la imagen
-                const imgPath = getDefaultImage(d.data);
+                const imgPath = await getDefaultImage(d.data);
                 
                 // Verificar si la imagen existe
                 const imgExists = await checkImageExists(imgPath);
@@ -509,8 +532,8 @@ function update(source) {
                 
                 // Círculo izquierdo (solo visual)
                 g.append("circle")
-                    .attr("cx", -35)
-                    .attr("r", 20)
+                    .attr("cx", -45)
+                    .attr("r", 30)
                     .style("fill", `url(#avatar-left-${d.data.id})`)
                     .style("stroke", "#1a73e8")
                     .style("stroke-width", "3px")
@@ -546,8 +569,8 @@ function update(source) {
 
                 // Círculo derecho (solo visual)
                 g.append("circle")
-                    .attr("cx", 35)
-                    .attr("r", 20)
+                    .attr("cx", 45)
+                    .attr("r", 30)
                     .style("fill", `url(#avatar-right-${d.data.id})`)
                     .style("stroke", "#1a73e8")
                     .style("stroke-width", "3px")
@@ -615,7 +638,7 @@ function update(source) {
         // Agregar círculos con imágenes a los nodos normales
         node.filter(d => !d.data.isRelationship)
             .append("circle")
-            .attr("r", 20)
+            .attr("r", 30)
             .style("fill", d => `url(#avatar-${d.data.id})`)
             .style("stroke", d => (d.children || d._children) ? "#1a73e8" : "#ccc")
             .style("stroke-width", "3px")

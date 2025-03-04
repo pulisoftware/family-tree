@@ -352,6 +352,31 @@ button:hover {
     transform: rotate(180deg);
 }
 
+#export-tree {
+    position: fixed;
+    left: 80px;
+    bottom: 20px;
+    z-index: 1000;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-size: 24px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#export-tree:hover {
+    transform: scale(1.1);
+    background-color: #1557b0;
+}
+
 /* Media query para dispositivos móviles */
 @media screen and (max-width: 768px) {
     .main-container {
@@ -387,24 +412,4 @@ button:hover {
     align-items: center;
     gap: 15px;
     margin-bottom: 20px;
-}
-
-#export-tree {
-    padding: 8px 12px;
-    border-radius: 8px;
-    background-color: #1a73e8;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-#export-tree:hover {
-    background-color: #1557b0;
-    transform: scale(1.05);
 } 
