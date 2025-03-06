@@ -22,26 +22,7 @@ const zoom = d3.zoom()
 // Aplicar zoom al SVG
 svg.call(zoom);
 
-// Centrar inicialmente el árbol
-function centerTree() {
-    const svgElement = document.querySelector("#tree-container svg");
-    const svgBox = svgElement.getBoundingClientRect();
-    const viewBox = svgElement.getAttribute("viewBox")?.split(" ").map(Number) || [0, 0, width, height];
-    
-    const scale = Math.min(
-        svgBox.width / viewBox[2],
-        svgBox.height / viewBox[3]
-    );
-    
-    const transform = d3.zoomIdentity
-        .translate(svgBox.width / 2, svgBox.height / 2)
-        .scale(scale)
-        .translate(-viewBox[2] / 2, -viewBox[3] / 2);
-    
-    svg.transition()
-        .duration(750)
-        .call(zoom.transform, transform);
-}
+
 
 // Crear el layout del árbol
 const tree = d3.tree()
@@ -643,9 +624,6 @@ function update(source) {
                             .style("opacity", .9);
                         let tooltipContent = `<strong>Fecha de celebración:</strong><br>
                                             <span class="celebration-date">${formatDate(d.data.celebrationDate)}</span>`;
-                        if (d.children || d._children) {
-                            tooltipContent += '<br><span class="hint">(Click para expandir/colapsar)</span>';
-                        }
                         tooltip.html(tooltipContent)
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px");
@@ -685,8 +663,6 @@ function update(source) {
         document.getElementById('loading-spinner').style.display = 'none';
     });
 
-    // Llamar a centerTree después de actualizar el árbol
-    centerTree();
 }
 
 // Función para obtener el nombre de la familia del query param
@@ -1055,27 +1031,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isExpanded = !isExpanded;
         update(root);
     });
-    
-    // Añadir botón de centrado
-    const centerButton = document.createElement('button');
-    centerButton.id = 'center-tree';
-    centerButton.innerHTML = '⌖';
-    centerButton.style.position = 'fixed';
-    centerButton.style.bottom = '20px';
-    centerButton.style.right = '20px';
-    centerButton.style.width = '50px';
-    centerButton.style.height = '50px';
-    centerButton.style.borderRadius = '50%';
-    centerButton.style.backgroundColor = '#1a73e8';
-    centerButton.style.color = 'white';
-    centerButton.style.border = 'none';
-    centerButton.style.fontSize = '24px';
-    centerButton.style.cursor = 'pointer';
-    centerButton.style.zIndex = '1000';
-    centerButton.title = 'Centrar árbol';
-    
-    centerButton.addEventListener('click', centerTree);
-    document.body.appendChild(centerButton);
     
     // Cargar los datos
     loadFamilyData();
