@@ -32,10 +32,80 @@
         {
             "id": "dolores_pulido_molina",
             "name": "Dolores Pulido Molina",
-            "birthDate": "1958-01-01",
+            "birthDate": "1967-04-15",
             "sex": "F",
             "type": "person",
             "parentId": "jose_dolores_relationship"
+        },
+        {
+            "id": "francisco_campanya_ruiz",
+            "name": "Francisco Campaña Ruíz",
+            "birthDate": "1966-10-05",
+            "sex": "M",
+            "type": "person"
+        },
+        {
+            "id": "dolores_francisco_relationship",
+            "name": "Dolores Pulido Molina y Francisco Campaña Ruíz",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "1980-01-01",
+            "parentId": "jose_dolores_relationship"
+        },
+        {
+            "id": "veronica_campanya_pulido",
+            "name": "Verónica Campaña Pulido",
+            "birthDate": "1991-08-28",
+            "sex": "F",
+            "type": "person",
+            "parentId": "dolores_francisco_relationship"
+        },
+        {
+            "id": "miguel_paradas_sarrias",
+            "name": "Miguel Paradas Sarrias",
+            "birthDate": "1991-03-27",
+            "sex": "M",
+            "type": "person",
+            "parentId": "dolores_francisco_relationship"
+        },
+        {
+            "id": "veronica_miguel_relationship",
+            "name": "Verónica Campaña Pulido y Miguel Paradas Sarrias",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "-",
+            "parentId": "dolores_francisco_relationship"
+        },
+        {
+            "id": "valeria_paradas_campanya",
+            "name": "Valeria Paradas Campaña",
+            "birthDate": "2023-08-13",
+            "sex": "F",
+            "type": "person",
+            "parentId": "veronica_miguel_relationship"
+        },
+        {
+            "id": "miriam_campanya_pulido",
+            "name": "Miriam Campaña Pulido",
+            "birthDate": "1995-02-26",
+            "sex": "F",
+            "type": "person",
+            "parentId": "dolores_francisco_relationship"
+        },
+        {
+            "id": "daniel_guadix_comino",
+            "name": "Daniel Guadix Comino",
+            "birthDate": "1995-03-09",
+            "sex": "M",
+            "type": "person"
+        },
+        {
+            "id": "miriam_dani_relationship",
+            "name": "Miriam Campaña Pulido y Daniel Guadix Comino",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "-",
+            "parentId": "dolores_francisco_relationship"
         },
         {
             "id": "pilar_pulido_molina",
