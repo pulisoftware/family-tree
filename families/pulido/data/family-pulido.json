@@ -31,7 +31,7 @@
         },
         {
             "id": "dolores_pulido_molina",
-            "name": "Dolores Pulido Molina",
+            "name": "Dolores Cleofle Pulido Molina",
             "birthDate": "1967-04-15",
             "sex": "F",
             "type": "person",
@@ -46,7 +46,7 @@
         },
         {
             "id": "dolores_francisco_relationship",
-            "name": "Dolores Pulido Molina y Francisco Campaña Ruíz",
+            "name": "Dolores Cleofle Pulido Molina y Francisco Campaña Ruíz",
             "type": "relationship",
             "isRelationship": true,
             "celebrationDate": "1980-01-01",
@@ -246,6 +246,75 @@
             "sex": "F",
             "type": "person",
             "parentId": "raul_mari_angeles_relationship"
+        },
+        {
+            "id": "eduardo_pulido_molina",
+            "name": "Eduardo Ramón Pulido Molina",
+            "birthDate": "1958-04-03",
+            "sex": "M",
+            "type": "person",
+            "parentId": "jose_dolores_relationship"
+        },
+        {
+            "id": "maria_diaz_ariza",
+            "name": "María Díaz Ariza",
+            "birthDate": "1957-03-27",
+            "sex": "F",
+            "type": "person"
+        },
+        {
+            "id": "eduardo_maria_relationship",
+            "name": "Eduardo Ramón Pulido Molina y María Díaz Ariza",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "-",
+            "parentId": "jose_dolores_relationship"
+        },
+        {
+            "id": "melisa_pulido_diaz",
+            "name": "Melisa Pulido Díaz",
+            "birthDate": "1994-05-23",
+            "sex": "F",
+            "type": "person",
+            "parentId": "eduardo_maria_relationship"
+        },
+        {
+            "id": "jose_maria_perez_cobo",
+            "name": "José María Perez Cobo",
+            "birthDate": "1991-10-15",
+            "sex": "M",
+            "type": "person"
+        },
+        {
+            "id": "melisa_jose_maria_relationship",
+            "name": "Melisa Pulido Díaz y José María Perez Cobo",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "-",
+            "parentId": "eduardo_maria_relationship"
+        },
+        {
+            "id": "maria_pulido_diaz",
+            "name": "María Pulido Díaz",
+            "birthDate": "1997-06-17",
+            "sex": "F",
+            "type": "person",
+            "parentId": "eduardo_maria_relationship"
+        },
+        {
+            "id": "javier_bermudez_rodriguez",
+            "name": "Javier Bermúdez Rodríguez",
+            "birthDate": "1993-03-10",
+            "sex": "M",
+            "type": "person"
+        },
+        {
+            "id": "maria_javier_relationship",
+            "name": "María Pulido Díaz y Javier Bermúdez Rodríguez",
+            "type": "relationship",
+            "isRelationship": true,
+            "celebrationDate": "-",
+            "parentId": "eduardo_maria_relationship"
         }
     ]
 } 
